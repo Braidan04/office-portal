@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Office Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+
+    <header class="admin-header">
+        <div class="admin-brand">
+            <div class="admin-logo">OP</div>
+            <div>
+                <h1>Office Portal</h1>
+                <p>Administration Dashboard</p>
+            </div>
+        </div>
+
+       
+ <div class="admin-header-actions">
+    <div id="adminStatus" class="admin-status">
+        Connecting to Firebase...
+    </div>
+
+    <button
+        type="button"
+        id="adminLogoutButton"
+        class="admin-logout-button">
+        Sign Out
+    </button>
+</div>
+
+    </header>
+
+    <main class="admin-container">
+        <section class="admin-welcome">
+            <h2>Access Requests</h2>
+            <p>Review and manage requests to access the Office Portal.</p>
+        </section>
+
+        <section class="admin-stats">
+            <div class="admin-stat">
+                <h3>Pending</h3>
+                <p id="pendingCount">0</p>
+            </div>
+
+            <div class="admin-stat">
+                <h3>Approved</h3>
+                <p id="approvedCount">0</p>
+            </div>
+
+            <div class="admin-stat">
+                <h3>Rejected</h3>
+                <p id="rejectedCount">0</p>
+            </div>
+        </section>
+
+        <section class="admin-panel">
+            <div class="admin-panel-heading">
+                <h2>Access Requests</h2>
+
+                <div>
+                    <input
+                        type="search"
+                        id="requestSearch"
+                        placeholder="Search name or email"
+                        aria-label="Search requests"
+                    >
+
+                    <select id="statusFilter" aria-label="Filter by status">
+                        <option value="all">All requests</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Date requested</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="requestTableBody"></tbody>
+                </table>
+            </div>
+
+            <p id="emptyMessage" class="admin-empty" hidden>
+                No access requests found.
+            </p>
+        </section>
+    </main>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

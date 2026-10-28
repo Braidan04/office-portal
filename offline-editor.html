@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Office Portal Offline Workspace</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f3f6fa;color:#1c2736}
+header{background:#1f4e79;color:white;padding:18px}
+main{max-width:1000px;margin:24px auto;padding:20px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+button,input{padding:10px;border:1px solid #ccd4df;border-radius:6px}
+button{cursor:pointer;background:white}
+.primary{background:#1f4e79;color:white}
+#editor{background:white;border:1px solid #ccd4df;border-radius:8px;
+min-height:350px;padding:18px;outline:none;overflow:auto}
+#editor:focus{border-color:#1f4e79}
+table{border-collapse:collapse;width:100%;background:white}
+td{border:1px solid #ccd4df;padding:10px;min-width:80px}
+td[contenteditable=true]:focus{outline:2px solid #1f4e79}
+.note{color:#536477;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <h2 id="heading">Office Portal Offline Workspace</h2>
+  <div>Offline mode</div>
+</header>
+
+<main>
+  <p class="note">
+    Your work is saved in this browser on this device.
+    Export a copy regularly so you can keep your files.
+  </p>
+
+  <label for="filename">File name:</label>
+  <input id="filename" value="My document">
+
+  <div class="toolbar">
+    <button id="save" class="primary">Save on this device</button>
+    <button id="download">Download a copy</button>
+    <button id="back">Back to portal</button>
+    <button id="bold">Bold</button>
+  </div>
+
+  <div id="editor" contenteditable="true"
+       role="textbox" aria-label="Offline editor">
+    Start working here...
+  </div>
+
+  <p id="status" class="note" aria-live="polite"></p>
+</main>
+
+<script>
+const params = new URLSearchParams(location.search);
+const app = params.get("app") || "word";
+const editor = document.getElementById("editor");
+const heading = document.getElementById("heading");
+const filename = document.getElementById("filename");
+const status = document.getElementById("status");
+
+const names = {
+  word: "Word Offline Editor",
+  excel: "Excel Offline Spreadsheet",
+  powerpoint: "PowerPoint Offline Slides"
+};
+
+heading.textContent = names[app] || names.word;
+document.title = heading.textContent;
+
+const storageKey = "office-portal-offline-" + app;
+
+function makeSpreadsheet() {
+  let html = "<table>";
+  for (let r = 0; r < 10; r++) {
+    html += "<tr>";
+    for (let c = 0; c < 6; c++) {
+      html += '<td contenteditable="true">' +
+        (r === 0 ? "Column " + (c + 1) : "") +
+        "</td>";
+    }
+    html += "</tr>";
+  }
+  return html + "</table>";
+}
+
+function makeSlides() {
+  return '<section contenteditable="true" ' +
+    'style="border:1px solid #ccd4df;padding:24px;margin-bottom:16px">' +
+    "<h2>Slide 1</h2><p>Type your presentation content here.</p></section>" +
+    '<button id="addSlide" type="button">Add slide</button>';
+}
+
+if (app === "excel") {
+  editor.innerHTML = makeSpreadsheet();
+} else if (app === "powerpoint") {
+  editor.innerHTML = makeSlides();
+  editor.addEventListener("click", event => {
+    if (event.target.id === "addSlide") {
+      const slide = document.createElement("section");
+      slide.contentEditable = "true";
+      slide.style.cssText =
+        "border:1px solid #ccd4df;padding:24px;margin-bottom:16px";
+      slide.innerHTML =
+        "<h2>New slide</h2><p>Type your content here.</p>";
+      editor.insertBefore(slide, event.target);
+    }
+  });
+}
+
+try {
+  const saved = localStorage.getItem(storageKey);
+  if (saved) {
+    const data = JSON.parse(saved);
+    editor.innerHTML = data.content;
+    filename.value = data.filename || "My document";
+  }
+} catch (error) {
+  status.textContent = "Could not load saved work from this browser.";
+}
+
+document.getElementById("save").addEventListener("click", () => {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({
+      filename: filename.value,
+      content: editor.innerHTML
+    }));
+    status.textContent = "Saved on this device.";
+  } catch (error) {
+    status.textContent =
+      "Could not save. Browser storage may be full or unavailable.";
+  }
+});
+
+document.getElementById("download").addEventListener("click", () => {
+  const content = app === "excel"
+    ? editor.innerText
+    : editor.innerHTML;
+
+  const mime = app === "excel" ? "text/plain" : "text/html";
+  const extension = app === "excel" ? ".txt" : ".html";
+  const blob = new Blob([content], { type: mime + ";charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = (filename.value.trim() || "My document") + extension;
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("bold").addEventListener("click", () => {
+  editor.focus();
+  document.execCommand("bold");
+});
+
+document.getElementById("back").addEventListener("click", () => {
+  location.href = "./index.html";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Access | Office Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+    <main class="login-container">
+        <section class="login-card">
+            <div class="login-brand">
+                <span class="admin-logo">O</span>
+                <h1>Office Portal</h1>
+            </div>
+
+            <h2>Request access</h2>
+            <p class="login-description">
+                Submit your details for administrator review.
+                Access is not automatic.
+            </p>
+
+            <form id="accessRequestForm">
+                <label for="fullName">Full name</label>
+                <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    placeholder="Enter your full name"
+                    autocomplete="name"
+                    required
+                    maxlength="100"
+                >
+
+                <label for="requestEmail">Email address</label>
+                <input
+                    type="email"
+                    id="requestEmail"
+                    name="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                    required
+                    maxlength="254"
+                >
+                
+<label for="requestPassword">Create password</label>
+<input
+    type="password"
+    id="requestPassword"
+    name="password"
+    placeholder="Create a password"
+    autocomplete="new-password"
+    minlength="6"
+    required
+>
+
+
+                <label for="reason">Why do you need access? (optional)</label>
+                <textarea
+                    id="reason"
+                    name="reason"
+                    placeholder="Briefly explain your request"
+                    rows="3"
+                    maxlength="500"
+                ></textarea>
+
+                <button type="submit" class="login-button">
+                    Submit access request
+                </button>
+
+                <p id="requestMessage" role="status" aria-live="polite"></p>
+            </form>
+
+            <p class="login-footer">
+                Already have an account?
+                <a href="login.html">Sign in</a>
+            </p>
+        </section>
+    </main>
+
+    <script type="module" src="request-access.js"></script>
+</body>
+</html>

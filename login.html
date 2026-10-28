@@ -1,0 +1,406 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#102d59">
+
+    <title>Office Portal | Login</title>
+
+    <link rel="stylesheet" href="./style.css">
+    <link rel="manifest" href="./manifest.json">
+</head>
+<body>
+
+<main class="login-container">
+
+    <!-- Animated Microsoft Office app icons -->
+    <div class="office-logo-animation" aria-hidden="true">
+
+        <div class="pop-logo logo-word">
+            <img src="./images/word.png" alt="">
+        </div>
+
+        <div class="pop-logo logo-powerpoint">
+            <img src="./images/power.png" alt="">
+        </div>
+
+        <div class="pop-logo logo-excel">
+            <img src="./images/excel.png" alt="">
+        </div>
+
+        <div class="pop-logo logo-onedrive">
+            <img src="./images/onedrive.png" alt="">
+        </div>
+
+    </div>
+
+    <!-- Login card -->
+    <section class="login-card">
+
+        <div class="login-brand">
+            <div class="login-logo">O</div>
+            <h1>Office Portal</h1>
+        </div>
+
+        <p class="login-description" id="screenDescription">
+            Sign in to access your productivity workspace.
+        </p>
+
+        <!-- SIGN-IN SCREEN -->
+        <div id="signInScreen" class="auth-screen">
+
+            <form id="loginForm">
+                <h2>Sign In</h2>
+
+                <label for="loginEmail">Email Address</label>
+                <input
+                    type="email"
+                    id="loginEmail"
+                    placeholder="Enter your email"
+                    autocomplete="username"
+                    required
+                >
+
+                <label for="loginPassword">Password</label>
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <p
+                    id="loginMessage"
+                    class="login-message"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+
+                <button
+                    type="submit"
+                    id="loginButton"
+                    class="login-button"
+                >
+                    Sign In
+                </button>
+            </form>
+
+            <div class="login-divider">
+                <span>NEW TO OFFICE PORTAL?</span>
+            </div>
+
+            <button
+                type="button"
+                id="showRegister"
+                class="auth-switch"
+            >
+                Create Account
+            </button>
+
+        </div>
+
+        <!-- CREATE-ACCOUNT SCREEN -->
+        <div id="registerScreen" class="auth-screen" hidden>
+
+            <form id="registerForm">
+                <h2>Create Your Account</h2>
+
+                <label for="fullName">Full Name</label>
+                <input
+                    type="text"
+                    id="fullName"
+                    placeholder="Enter your full name"
+                    autocomplete="name"
+                    required
+                >
+
+                <label for="registerEmail">Email Address</label>
+                <input
+                    type="email"
+                    id="registerEmail"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                    required
+                >
+
+                <label for="registerPassword">Password</label>
+                <input
+                    type="password"
+                    id="registerPassword"
+                    placeholder="At least 6 characters"
+                    minlength="6"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <p
+                    id="registerMessage"
+                    class="login-message"
+                    role="status"
+                    aria-live="polite"
+                ></p>
+
+                <button
+                    type="submit"
+                    id="registerButton"
+                    class="login-button"
+                >
+                    Register Account
+                </button>
+
+                <p class="register-note">
+                    New accounts require administrator approval
+                    before accessing the portal.
+                </p>
+            </form>
+
+            <button
+                type="button"
+                id="showLogin"
+                class="auth-switch"
+            >
+                Back to Sign In
+            </button>
+
+        </div>
+
+        <p class="login-footer">
+            Office Portal · Your productivity workspace
+        </p>
+
+    </section>
+</main>
+
+<script type="module">
+    import { auth, db } from "./firebase.js";
+
+    import {
+        signInWithEmailAndPassword,
+        createUserWithEmailAndPassword,
+        signOut
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+    import {
+        doc,
+        getDoc,
+        setDoc,
+        serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    const ADMIN_UID = "fSdAynS5qHce8o4LsDbmoJRyK0x1";
+
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+
+    const signInScreen = document.getElementById("signInScreen");
+    const registerScreen = document.getElementById("registerScreen");
+    const screenDescription = document.getElementById("screenDescription");
+
+    // Switch between Sign In and Create Account.
+    function showScreen(screen) {
+        const isRegistering = screen === "register";
+
+        signInScreen.hidden = isRegistering;
+        registerScreen.hidden = !isRegistering;
+
+        screenDescription.textContent = isRegistering
+            ? "Create your account to request access to the workspace."
+            : "Sign in to access your productivity workspace.";
+
+        document.getElementById("loginMessage").textContent = "";
+        document.getElementById("registerMessage").textContent = "";
+
+        if (isRegistering) {
+            document.getElementById("fullName").focus();
+        } else {
+            document.getElementById("loginEmail").focus();
+        }
+    }
+
+    document.getElementById("showRegister").addEventListener("click", () => {
+        showScreen("register");
+    });
+
+    document.getElementById("showLogin").addEventListener("click", () => {
+        showScreen("login");
+    });
+
+    // Report missing Office app images.
+    document.querySelectorAll(".office-logo-animation img").forEach(img => {
+        img.addEventListener("error", () => {
+            console.error(
+                "Office app image failed to load:",
+                img.getAttribute("src")
+            );
+        });
+    });
+
+    function showError(elementId, error) {
+        const errors = {
+            "auth/invalid-credential":
+                "Incorrect email or password.",
+
+            "auth/email-already-in-use":
+                "This email already has an account.",
+
+            "auth/invalid-email":
+                "Please enter a valid email address.",
+
+            "auth/weak-password":
+                "Choose a password with at least 6 characters.",
+
+            "auth/network-request-failed":
+                "Connection failed. Check your internet.",
+
+            "permission-denied":
+                "Permission denied. Check your Firestore rules."
+        };
+
+        console.error("Office Portal error:", error);
+
+        document.getElementById(elementId).textContent =
+            errors[error.code] ||
+            "Something went wrong. Please try again.";
+    }
+
+    // SIGN IN
+    loginForm.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const button = document.getElementById("loginButton");
+        const message = document.getElementById("loginMessage");
+
+        button.disabled = true;
+        message.textContent = "Signing in...";
+
+        try {
+            const email =
+                document.getElementById("loginEmail").value.trim();
+
+            const password =
+                document.getElementById("loginPassword").value;
+
+            const result = await signInWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+            const user = result.user;
+
+            // Administrator access
+            if (user.uid === ADMIN_UID) {
+                window.location.replace("./admin.html");
+                return;
+            }
+
+            // Check administrator approval
+            const approvedRef = doc(
+                db,
+                "approvedUsers",
+                user.uid
+            );
+
+            const approvedSnapshot = await getDoc(approvedRef);
+
+            if (
+                approvedSnapshot.exists() &&
+                approvedSnapshot.data().approved === true
+            ) {
+                window.location.replace("./index.html");
+                return;
+            }
+
+            // Sign out unapproved users
+            await signOut(auth);
+
+            message.textContent =
+                "Your account is awaiting administrator approval.";
+
+        } catch (error) {
+            showError("loginMessage", error);
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    // CREATE ACCOUNT
+    registerForm.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const button = document.getElementById("registerButton");
+        const message = document.getElementById("registerMessage");
+
+        button.disabled = true;
+        message.textContent = "Creating your account...";
+
+        let createdUser = null;
+
+        try {
+            const fullName =
+                document.getElementById("fullName").value.trim();
+
+            const email =
+                document.getElementById("registerEmail").value.trim();
+
+            const password =
+                document.getElementById("registerPassword").value;
+
+            const result = await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+            createdUser = result.user;
+
+            // Submit access request for administrator approval.
+            await setDoc(
+                doc(db, "accessRequests", createdUser.uid),
+                {
+                    fullName,
+                    email,
+                    status: "pending",
+                    requestedAt: serverTimestamp()
+                }
+            );
+
+            await signOut(auth);
+
+            registerForm.reset();
+            showScreen("login");
+
+            document.getElementById("loginMessage").textContent =
+                "Account created successfully. Wait for administrator approval.";
+
+        } catch (error) {
+            if (createdUser) {
+                message.textContent =
+                    "Your account was created, but the access request could not be saved. Contact the administrator.";
+
+                console.error("Access request failed:", error);
+            } else {
+                showError("registerMessage", error);
+            }
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    // Register the service worker.
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker
+                .register("./service-worker.js")
+                .catch(error => {
+                    console.error("Offline setup failed:", error);
+                });
+        });
+    }
+</script>
+
+</body>
+</html>
